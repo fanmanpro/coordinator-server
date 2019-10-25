@@ -1,15 +1,15 @@
 package ws
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/fanmanpro/coordinator-server/gamedata"
+	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 )
 
-var addr = flag.String("addr", "localhost:8080", "http service address")
 var upgrader = websocket.Upgrader{}
 
 // WebSocketServer to open web socket ports
@@ -36,14 +36,30 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer c.Close()
+	go receiving(c)
+	sending(c)
+}
+func receiving(c *websocket.Conn) {
 	for {
 		mt, message, err := c.ReadMessage()
+		log.Println("mt: ", mt)
 		if err != nil {
-			log.Println("read:", err)
+			log.Println("read: ", err)
 			break
 		}
-		log.Printf("recv: %s", message)
-		err = c.WriteMessage(mt, message)
+		if mt == websocket.BinaryMessage {
+			newMessage := &gamedata.Packet{}
+			err = proto.Unmarshal(message, newMessage)
+			if err != nil {
+				panic(err)
+			}
+			log.Printf("recv: %s", newMessage.Header.OpCode)
+		}
+	}
+}
+func sending(c *websocket.Conn) {
+	for {
+		err := c.WriteMessage(websocket.BinaryMessage, []byte{})
 		if err != nil {
 			log.Println("write:", err)
 			break
