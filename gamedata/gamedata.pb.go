@@ -53,41 +53,34 @@ type Header_OpCode int32
 
 const (
 	Header_Invalid Header_OpCode = 0
-	// simulation server establishes connection with game server
-	Header_SimulationServerJoined Header_OpCode = 1
 	// (A.1) client informs game server of successful connection to
 	// coordinator
-	Header_ClientJoined Header_OpCode = 100
-	// (A.2) game server tells sim server to create new client owned game
-	// object from prefab
-	// (A.3) sim server tells game server of new client game object and id
-	// (A.4) game server tells client to create new client owned game
-	// object from prefab
-	Header_NewClientGameObject Header_OpCode = 200
-	// (B.1) sim server tells game server to create new game object from prefab
-	// (B.2) game server tells clients to create new game object from prefab
-	Header_NewGameObject Header_OpCode = 201
-	// (A.5) (FixedUpdate) sim server sends existing client game object's delta to game server
-	// (B.3) (FixedUpdate) game server sends existing game object's delta to all clients
-	Header_GameObjectDelta Header_OpCode = 300
+	Header_ClientOnline      Header_OpCode = 100
+	Header_GameServerOnline  Header_OpCode = 101
+	Header_GameServerStart   Header_OpCode = 102
+	Header_ClientGameRequest Header_OpCode = 200
+	Header_ClientGameCancel  Header_OpCode = 201
+	Header_ClientGameFound   Header_OpCode = 202
 )
 
 var Header_OpCode_name = map[int32]string{
 	0:   "Invalid",
-	1:   "SimulationServerJoined",
-	100: "ClientJoined",
-	200: "NewClientGameObject",
-	201: "NewGameObject",
-	300: "GameObjectDelta",
+	100: "ClientOnline",
+	101: "GameServerOnline",
+	102: "GameServerStart",
+	200: "ClientGameRequest",
+	201: "ClientGameCancel",
+	202: "ClientGameFound",
 }
 
 var Header_OpCode_value = map[string]int32{
-	"Invalid":                0,
-	"SimulationServerJoined": 1,
-	"ClientJoined":           100,
-	"NewClientGameObject":    200,
-	"NewGameObject":          201,
-	"GameObjectDelta":        300,
+	"Invalid":           0,
+	"ClientOnline":      100,
+	"GameServerOnline":  101,
+	"GameServerStart":   102,
+	"ClientGameRequest": 200,
+	"ClientGameCancel":  201,
+	"ClientGameFound":   202,
 }
 
 func (x Header_OpCode) String() string {
@@ -145,293 +138,260 @@ func (m *Packet) GetData() *any.Any {
 	return nil
 }
 
-type SimulationServerJoin struct {
-	Id                   int32    `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+type ClientOnline struct {
+	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *SimulationServerJoin) Reset()         { *m = SimulationServerJoin{} }
-func (m *SimulationServerJoin) String() string { return proto.CompactTextString(m) }
-func (*SimulationServerJoin) ProtoMessage()    {}
-func (*SimulationServerJoin) Descriptor() ([]byte, []int) {
+func (m *ClientOnline) Reset()         { *m = ClientOnline{} }
+func (m *ClientOnline) String() string { return proto.CompactTextString(m) }
+func (*ClientOnline) ProtoMessage()    {}
+func (*ClientOnline) Descriptor() ([]byte, []int) {
 	return fileDescriptor_38d51a89ffb18ac9, []int{1}
 }
 
-func (m *SimulationServerJoin) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_SimulationServerJoin.Unmarshal(m, b)
+func (m *ClientOnline) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ClientOnline.Unmarshal(m, b)
 }
-func (m *SimulationServerJoin) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_SimulationServerJoin.Marshal(b, m, deterministic)
+func (m *ClientOnline) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ClientOnline.Marshal(b, m, deterministic)
 }
-func (m *SimulationServerJoin) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SimulationServerJoin.Merge(m, src)
+func (m *ClientOnline) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClientOnline.Merge(m, src)
 }
-func (m *SimulationServerJoin) XXX_Size() int {
-	return xxx_messageInfo_SimulationServerJoin.Size(m)
+func (m *ClientOnline) XXX_Size() int {
+	return xxx_messageInfo_ClientOnline.Size(m)
 }
-func (m *SimulationServerJoin) XXX_DiscardUnknown() {
-	xxx_messageInfo_SimulationServerJoin.DiscardUnknown(m)
+func (m *ClientOnline) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClientOnline.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_SimulationServerJoin proto.InternalMessageInfo
+var xxx_messageInfo_ClientOnline proto.InternalMessageInfo
 
-func (m *SimulationServerJoin) GetId() int32 {
+func (m *ClientOnline) GetName() string {
 	if m != nil {
-		return m.Id
+		return m.Name
 	}
-	return 0
+	return ""
 }
 
-type ClientJoined struct {
-	Id                   int32    `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+type GameServerOnline struct {
+	Secret               string   `protobuf:"bytes,1,opt,name=secret,proto3" json:"secret,omitempty"`
+	Region               string   `protobuf:"bytes,2,opt,name=region,proto3" json:"region,omitempty"`
+	Capacity             int32    `protobuf:"varint,3,opt,name=capacity,proto3" json:"capacity,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *ClientJoined) Reset()         { *m = ClientJoined{} }
-func (m *ClientJoined) String() string { return proto.CompactTextString(m) }
-func (*ClientJoined) ProtoMessage()    {}
-func (*ClientJoined) Descriptor() ([]byte, []int) {
+func (m *GameServerOnline) Reset()         { *m = GameServerOnline{} }
+func (m *GameServerOnline) String() string { return proto.CompactTextString(m) }
+func (*GameServerOnline) ProtoMessage()    {}
+func (*GameServerOnline) Descriptor() ([]byte, []int) {
 	return fileDescriptor_38d51a89ffb18ac9, []int{2}
 }
 
-func (m *ClientJoined) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ClientJoined.Unmarshal(m, b)
+func (m *GameServerOnline) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GameServerOnline.Unmarshal(m, b)
 }
-func (m *ClientJoined) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ClientJoined.Marshal(b, m, deterministic)
+func (m *GameServerOnline) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GameServerOnline.Marshal(b, m, deterministic)
 }
-func (m *ClientJoined) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ClientJoined.Merge(m, src)
+func (m *GameServerOnline) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GameServerOnline.Merge(m, src)
 }
-func (m *ClientJoined) XXX_Size() int {
-	return xxx_messageInfo_ClientJoined.Size(m)
+func (m *GameServerOnline) XXX_Size() int {
+	return xxx_messageInfo_GameServerOnline.Size(m)
 }
-func (m *ClientJoined) XXX_DiscardUnknown() {
-	xxx_messageInfo_ClientJoined.DiscardUnknown(m)
+func (m *GameServerOnline) XXX_DiscardUnknown() {
+	xxx_messageInfo_GameServerOnline.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_ClientJoined proto.InternalMessageInfo
+var xxx_messageInfo_GameServerOnline proto.InternalMessageInfo
 
-func (m *ClientJoined) GetId() int32 {
+func (m *GameServerOnline) GetSecret() string {
 	if m != nil {
-		return m.Id
+		return m.Secret
+	}
+	return ""
+}
+
+func (m *GameServerOnline) GetRegion() string {
+	if m != nil {
+		return m.Region
+	}
+	return ""
+}
+
+func (m *GameServerOnline) GetCapacity() int32 {
+	if m != nil {
+		return m.Capacity
 	}
 	return 0
 }
 
-type NewClientGameObject struct {
-	ID                   int32    `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	Prefab               Prefab   `protobuf:"varint,2,opt,name=prefab,proto3,enum=gamedata.Prefab" json:"prefab,omitempty"`
+type GameServerStart struct {
+	ID                   string   `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Clients              []string `protobuf:"bytes,2,rep,name=clients,proto3" json:"clients,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *NewClientGameObject) Reset()         { *m = NewClientGameObject{} }
-func (m *NewClientGameObject) String() string { return proto.CompactTextString(m) }
-func (*NewClientGameObject) ProtoMessage()    {}
-func (*NewClientGameObject) Descriptor() ([]byte, []int) {
+func (m *GameServerStart) Reset()         { *m = GameServerStart{} }
+func (m *GameServerStart) String() string { return proto.CompactTextString(m) }
+func (*GameServerStart) ProtoMessage()    {}
+func (*GameServerStart) Descriptor() ([]byte, []int) {
 	return fileDescriptor_38d51a89ffb18ac9, []int{3}
 }
 
-func (m *NewClientGameObject) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_NewClientGameObject.Unmarshal(m, b)
+func (m *GameServerStart) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GameServerStart.Unmarshal(m, b)
 }
-func (m *NewClientGameObject) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_NewClientGameObject.Marshal(b, m, deterministic)
+func (m *GameServerStart) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GameServerStart.Marshal(b, m, deterministic)
 }
-func (m *NewClientGameObject) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_NewClientGameObject.Merge(m, src)
+func (m *GameServerStart) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GameServerStart.Merge(m, src)
 }
-func (m *NewClientGameObject) XXX_Size() int {
-	return xxx_messageInfo_NewClientGameObject.Size(m)
+func (m *GameServerStart) XXX_Size() int {
+	return xxx_messageInfo_GameServerStart.Size(m)
 }
-func (m *NewClientGameObject) XXX_DiscardUnknown() {
-	xxx_messageInfo_NewClientGameObject.DiscardUnknown(m)
+func (m *GameServerStart) XXX_DiscardUnknown() {
+	xxx_messageInfo_GameServerStart.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_NewClientGameObject proto.InternalMessageInfo
+var xxx_messageInfo_GameServerStart proto.InternalMessageInfo
 
-func (m *NewClientGameObject) GetID() int32 {
+func (m *GameServerStart) GetID() string {
 	if m != nil {
 		return m.ID
 	}
-	return 0
+	return ""
 }
 
-func (m *NewClientGameObject) GetPrefab() Prefab {
+func (m *GameServerStart) GetClients() []string {
 	if m != nil {
-		return m.Prefab
+		return m.Clients
 	}
-	return Prefab_Invalid
+	return nil
 }
 
-type NewGameObject struct {
-	ID                   int32    `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	Prefab               Prefab   `protobuf:"varint,2,opt,name=prefab,proto3,enum=gamedata.Prefab" json:"prefab,omitempty"`
+type ClientGameFound struct {
+	ID                   string   `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *NewGameObject) Reset()         { *m = NewGameObject{} }
-func (m *NewGameObject) String() string { return proto.CompactTextString(m) }
-func (*NewGameObject) ProtoMessage()    {}
-func (*NewGameObject) Descriptor() ([]byte, []int) {
+func (m *ClientGameFound) Reset()         { *m = ClientGameFound{} }
+func (m *ClientGameFound) String() string { return proto.CompactTextString(m) }
+func (*ClientGameFound) ProtoMessage()    {}
+func (*ClientGameFound) Descriptor() ([]byte, []int) {
 	return fileDescriptor_38d51a89ffb18ac9, []int{4}
 }
 
-func (m *NewGameObject) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_NewGameObject.Unmarshal(m, b)
+func (m *ClientGameFound) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ClientGameFound.Unmarshal(m, b)
 }
-func (m *NewGameObject) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_NewGameObject.Marshal(b, m, deterministic)
+func (m *ClientGameFound) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ClientGameFound.Marshal(b, m, deterministic)
 }
-func (m *NewGameObject) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_NewGameObject.Merge(m, src)
+func (m *ClientGameFound) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClientGameFound.Merge(m, src)
 }
-func (m *NewGameObject) XXX_Size() int {
-	return xxx_messageInfo_NewGameObject.Size(m)
+func (m *ClientGameFound) XXX_Size() int {
+	return xxx_messageInfo_ClientGameFound.Size(m)
 }
-func (m *NewGameObject) XXX_DiscardUnknown() {
-	xxx_messageInfo_NewGameObject.DiscardUnknown(m)
+func (m *ClientGameFound) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClientGameFound.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_NewGameObject proto.InternalMessageInfo
+var xxx_messageInfo_ClientGameFound proto.InternalMessageInfo
 
-func (m *NewGameObject) GetID() int32 {
+func (m *ClientGameFound) GetID() string {
 	if m != nil {
 		return m.ID
 	}
-	return 0
+	return ""
 }
 
-func (m *NewGameObject) GetPrefab() Prefab {
-	if m != nil {
-		return m.Prefab
-	}
-	return Prefab_Invalid
-}
-
-type GameObjectDelta struct {
-	ID                   int32    `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	Position             *Vector2 `protobuf:"bytes,2,opt,name=position,proto3" json:"position,omitempty"`
-	Rotation             float32  `protobuf:"fixed32,3,opt,name=rotation,proto3" json:"rotation,omitempty"`
-	Velocity             *Vector2 `protobuf:"bytes,4,opt,name=velocity,proto3" json:"velocity,omitempty"`
+type ClientGameRequest struct {
+	Region               string   `protobuf:"bytes,1,opt,name=region,proto3" json:"region,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *GameObjectDelta) Reset()         { *m = GameObjectDelta{} }
-func (m *GameObjectDelta) String() string { return proto.CompactTextString(m) }
-func (*GameObjectDelta) ProtoMessage()    {}
-func (*GameObjectDelta) Descriptor() ([]byte, []int) {
+func (m *ClientGameRequest) Reset()         { *m = ClientGameRequest{} }
+func (m *ClientGameRequest) String() string { return proto.CompactTextString(m) }
+func (*ClientGameRequest) ProtoMessage()    {}
+func (*ClientGameRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_38d51a89ffb18ac9, []int{5}
 }
 
-func (m *GameObjectDelta) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_GameObjectDelta.Unmarshal(m, b)
+func (m *ClientGameRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ClientGameRequest.Unmarshal(m, b)
 }
-func (m *GameObjectDelta) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_GameObjectDelta.Marshal(b, m, deterministic)
+func (m *ClientGameRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ClientGameRequest.Marshal(b, m, deterministic)
 }
-func (m *GameObjectDelta) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GameObjectDelta.Merge(m, src)
+func (m *ClientGameRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClientGameRequest.Merge(m, src)
 }
-func (m *GameObjectDelta) XXX_Size() int {
-	return xxx_messageInfo_GameObjectDelta.Size(m)
+func (m *ClientGameRequest) XXX_Size() int {
+	return xxx_messageInfo_ClientGameRequest.Size(m)
 }
-func (m *GameObjectDelta) XXX_DiscardUnknown() {
-	xxx_messageInfo_GameObjectDelta.DiscardUnknown(m)
+func (m *ClientGameRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClientGameRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GameObjectDelta proto.InternalMessageInfo
+var xxx_messageInfo_ClientGameRequest proto.InternalMessageInfo
 
-func (m *GameObjectDelta) GetID() int32 {
+func (m *ClientGameRequest) GetRegion() string {
 	if m != nil {
-		return m.ID
+		return m.Region
 	}
-	return 0
+	return ""
 }
 
-func (m *GameObjectDelta) GetPosition() *Vector2 {
-	if m != nil {
-		return m.Position
-	}
-	return nil
-}
-
-func (m *GameObjectDelta) GetRotation() float32 {
-	if m != nil {
-		return m.Rotation
-	}
-	return 0
-}
-
-func (m *GameObjectDelta) GetVelocity() *Vector2 {
-	if m != nil {
-		return m.Velocity
-	}
-	return nil
-}
-
-type Vector2 struct {
-	X                    float32  `protobuf:"fixed32,1,opt,name=x,proto3" json:"x,omitempty"`
-	Y                    float32  `protobuf:"fixed32,2,opt,name=y,proto3" json:"y,omitempty"`
+type ClientGameCancel struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Vector2) Reset()         { *m = Vector2{} }
-func (m *Vector2) String() string { return proto.CompactTextString(m) }
-func (*Vector2) ProtoMessage()    {}
-func (*Vector2) Descriptor() ([]byte, []int) {
+func (m *ClientGameCancel) Reset()         { *m = ClientGameCancel{} }
+func (m *ClientGameCancel) String() string { return proto.CompactTextString(m) }
+func (*ClientGameCancel) ProtoMessage()    {}
+func (*ClientGameCancel) Descriptor() ([]byte, []int) {
 	return fileDescriptor_38d51a89ffb18ac9, []int{6}
 }
 
-func (m *Vector2) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Vector2.Unmarshal(m, b)
+func (m *ClientGameCancel) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ClientGameCancel.Unmarshal(m, b)
 }
-func (m *Vector2) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Vector2.Marshal(b, m, deterministic)
+func (m *ClientGameCancel) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ClientGameCancel.Marshal(b, m, deterministic)
 }
-func (m *Vector2) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Vector2.Merge(m, src)
+func (m *ClientGameCancel) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClientGameCancel.Merge(m, src)
 }
-func (m *Vector2) XXX_Size() int {
-	return xxx_messageInfo_Vector2.Size(m)
+func (m *ClientGameCancel) XXX_Size() int {
+	return xxx_messageInfo_ClientGameCancel.Size(m)
 }
-func (m *Vector2) XXX_DiscardUnknown() {
-	xxx_messageInfo_Vector2.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Vector2 proto.InternalMessageInfo
-
-func (m *Vector2) GetX() float32 {
-	if m != nil {
-		return m.X
-	}
-	return 0
+func (m *ClientGameCancel) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClientGameCancel.DiscardUnknown(m)
 }
 
-func (m *Vector2) GetY() float32 {
-	if m != nil {
-		return m.Y
-	}
-	return 0
-}
+var xxx_messageInfo_ClientGameCancel proto.InternalMessageInfo
 
 type Header struct {
-	Cid int32 `protobuf:"varint,1,opt,name=cid,proto3" json:"cid,omitempty"`
+	Cid string `protobuf:"bytes,1,opt,name=cid,proto3" json:"cid,omitempty"`
 	// connection is lost
-	Timestamp            int32         `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	OpCode               Header_OpCode `protobuf:"varint,3,opt,name=opCode,proto3,enum=gamedata.Header_OpCode" json:"opCode,omitempty"`
+	OpCode               Header_OpCode `protobuf:"varint,2,opt,name=opCode,proto3,enum=gamedata.Header_OpCode" json:"opCode,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
 	XXX_unrecognized     []byte        `json:"-"`
 	XXX_sizecache        int32         `json:"-"`
@@ -462,18 +422,11 @@ func (m *Header) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Header proto.InternalMessageInfo
 
-func (m *Header) GetCid() int32 {
+func (m *Header) GetCid() string {
 	if m != nil {
 		return m.Cid
 	}
-	return 0
-}
-
-func (m *Header) GetTimestamp() int32 {
-	if m != nil {
-		return m.Timestamp
-	}
-	return 0
+	return ""
 }
 
 func (m *Header) GetOpCode() Header_OpCode {
@@ -487,46 +440,43 @@ func init() {
 	proto.RegisterEnum("gamedata.Prefab", Prefab_name, Prefab_value)
 	proto.RegisterEnum("gamedata.Header_OpCode", Header_OpCode_name, Header_OpCode_value)
 	proto.RegisterType((*Packet)(nil), "gamedata.Packet")
-	proto.RegisterType((*SimulationServerJoin)(nil), "gamedata.SimulationServerJoin")
-	proto.RegisterType((*ClientJoined)(nil), "gamedata.ClientJoined")
-	proto.RegisterType((*NewClientGameObject)(nil), "gamedata.NewClientGameObject")
-	proto.RegisterType((*NewGameObject)(nil), "gamedata.NewGameObject")
-	proto.RegisterType((*GameObjectDelta)(nil), "gamedata.GameObjectDelta")
-	proto.RegisterType((*Vector2)(nil), "gamedata.Vector2")
+	proto.RegisterType((*ClientOnline)(nil), "gamedata.ClientOnline")
+	proto.RegisterType((*GameServerOnline)(nil), "gamedata.GameServerOnline")
+	proto.RegisterType((*GameServerStart)(nil), "gamedata.GameServerStart")
+	proto.RegisterType((*ClientGameFound)(nil), "gamedata.ClientGameFound")
+	proto.RegisterType((*ClientGameRequest)(nil), "gamedata.ClientGameRequest")
+	proto.RegisterType((*ClientGameCancel)(nil), "gamedata.ClientGameCancel")
 	proto.RegisterType((*Header)(nil), "gamedata.Header")
 }
 
 func init() { proto.RegisterFile("gamedata.proto", fileDescriptor_38d51a89ffb18ac9) }
 
 var fileDescriptor_38d51a89ffb18ac9 = []byte{
-	// 453 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x52, 0xd1, 0x6e, 0xd3, 0x30,
-	0x14, 0xc5, 0xde, 0x96, 0x95, 0xbb, 0x51, 0x8c, 0xa9, 0x20, 0x54, 0x08, 0x4d, 0x91, 0x40, 0x15,
-	0x12, 0xa9, 0x54, 0xf8, 0x01, 0x58, 0x25, 0x28, 0x0f, 0xeb, 0xe4, 0x49, 0x3c, 0xf1, 0xe2, 0xc6,
-	0x77, 0xc5, 0x90, 0xc4, 0x51, 0xe6, 0x75, 0xcd, 0x17, 0xf0, 0x11, 0xfc, 0x02, 0x1f, 0x02, 0xdf,
-	0xc3, 0x0f, 0x20, 0x3b, 0x69, 0xca, 0xd6, 0xf2, 0xb6, 0xb7, 0xf8, 0x9c, 0x93, 0xe3, 0xe3, 0x7b,
-	0x0f, 0x74, 0xe7, 0x32, 0x43, 0x25, 0xad, 0x8c, 0x8b, 0xd2, 0x58, 0xc3, 0x3b, 0xab, 0x73, 0xff,
-	0xc9, 0xdc, 0x98, 0x79, 0x8a, 0x43, 0x8f, 0xcf, 0x2e, 0xcf, 0x87, 0x32, 0xaf, 0x6a, 0x51, 0xf4,
-	0x19, 0x82, 0x53, 0x99, 0x7c, 0x43, 0xcb, 0x07, 0x10, 0x7c, 0x41, 0xa9, 0xb0, 0x0c, 0xc9, 0x11,
-	0x19, 0x1c, 0x8c, 0x58, 0xdc, 0xfa, 0x7d, 0xf0, 0xb8, 0x68, 0x78, 0x3e, 0x80, 0x5d, 0x07, 0x87,
-	0xd4, 0xeb, 0x7a, 0x71, 0xed, 0x1e, 0xaf, 0xdc, 0xe3, 0xb7, 0x79, 0x25, 0xbc, 0x22, 0x7a, 0x01,
-	0xbd, 0x33, 0x9d, 0x5d, 0xa6, 0xd2, 0x6a, 0x93, 0x9f, 0x61, 0xb9, 0xc0, 0xf2, 0xa3, 0xd1, 0x39,
-	0xef, 0x02, 0xd5, 0xca, 0xdf, 0xb3, 0x27, 0xa8, 0x56, 0xd1, 0x33, 0x38, 0x3c, 0x4e, 0x35, 0xe6,
-	0xd6, 0xb1, 0xa8, 0x36, 0xf8, 0x29, 0x3c, 0x3c, 0xc1, 0xab, 0x5a, 0xf2, 0x5e, 0x66, 0x38, 0x9d,
-	0x7d, 0xc5, 0xc4, 0x3a, 0xd9, 0x64, 0xbc, 0x92, 0x4d, 0xc6, 0xee, 0x09, 0x45, 0x89, 0xe7, 0x72,
-	0xe6, 0xa3, 0x75, 0xff, 0x7d, 0xc2, 0xa9, 0xc7, 0x45, 0xc3, 0x47, 0x13, 0xb8, 0x77, 0x82, 0x57,
-	0xb7, 0x62, 0xf5, 0x83, 0xc0, 0xfd, 0xb5, 0xd1, 0x18, 0x53, 0x2b, 0x37, 0xdc, 0x5e, 0x41, 0xa7,
-	0x30, 0x17, 0xda, 0x4d, 0xa1, 0x99, 0xda, 0x83, 0xb5, 0xdf, 0x27, 0x4c, 0xac, 0x29, 0x47, 0xa2,
-	0x95, 0xf0, 0x3e, 0x74, 0x4a, 0x63, 0xfd, 0xd0, 0xc2, 0x9d, 0x23, 0x32, 0xa0, 0xa2, 0x3d, 0x3b,
-	0xab, 0x05, 0xa6, 0x26, 0xd1, 0xb6, 0x0a, 0x77, 0xff, 0x6b, 0xb5, 0x92, 0x44, 0xcf, 0x61, 0xbf,
-	0x01, 0xf9, 0x21, 0x90, 0xa5, 0xcf, 0x44, 0x05, 0x59, 0xba, 0x53, 0xe5, 0xb3, 0x50, 0x41, 0xaa,
-	0xe8, 0x0f, 0x81, 0xa0, 0xde, 0x32, 0x67, 0xb0, 0x93, 0xb4, 0xc3, 0x77, 0x9f, 0xfc, 0x29, 0xdc,
-	0xb5, 0x3a, 0xc3, 0x0b, 0x2b, 0xb3, 0xc2, 0xff, 0xb2, 0x27, 0xd6, 0x00, 0x1f, 0x42, 0x60, 0x8a,
-	0x63, 0xa3, 0xd0, 0x47, 0xed, 0x8e, 0x1e, 0xdf, 0xec, 0x4d, 0x3c, 0xf5, 0xb4, 0x68, 0x64, 0xd1,
-	0x77, 0x02, 0x41, 0x0d, 0xf1, 0x03, 0xd8, 0x9f, 0xe4, 0x0b, 0x99, 0x6a, 0xc5, 0xee, 0xf0, 0x3e,
-	0x3c, 0xda, 0x56, 0x16, 0x54, 0x8c, 0x70, 0x76, 0xbd, 0x20, 0x4c, 0xf1, 0x70, 0x6b, 0x25, 0xd8,
-	0x2f, 0xc2, 0xf9, 0x8d, 0xdd, 0xb2, 0xdf, 0x84, 0xf7, 0x36, 0x76, 0xc4, 0x7e, 0xd2, 0x97, 0x6f,
-	0x20, 0xa8, 0x97, 0x79, 0x3d, 0x48, 0x7b, 0x59, 0x4d, 0x32, 0xe2, 0xe8, 0x31, 0x66, 0xe6, 0x9d,
-	0x59, 0x32, 0x3a, 0x0b, 0x7c, 0xd1, 0x5f, 0xff, 0x0d, 0x00, 0x00, 0xff, 0xff, 0x12, 0x3c, 0x5d,
-	0x93, 0x70, 0x03, 0x00, 0x00,
+	// 408 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x52, 0xc1, 0x6e, 0x13, 0x31,
+	0x10, 0xc5, 0x9b, 0xe2, 0x36, 0x53, 0x94, 0x9a, 0x21, 0x94, 0xa5, 0xa7, 0xe0, 0xd3, 0x0a, 0xa4,
+	0x8d, 0x54, 0xb8, 0x71, 0x82, 0x44, 0x40, 0x4e, 0xad, 0xdc, 0x2b, 0x42, 0x72, 0x76, 0x27, 0x61,
+	0xc5, 0xc6, 0x0e, 0x8e, 0x53, 0x91, 0x2f, 0xe1, 0x97, 0x80, 0xff, 0xe0, 0x3f, 0xd0, 0x7a, 0x9d,
+	0xa6, 0x34, 0x70, 0xf3, 0x7b, 0xf3, 0xfc, 0x3c, 0xf3, 0xc6, 0xd0, 0x9b, 0xeb, 0x05, 0x95, 0xda,
+	0xeb, 0x7c, 0xe9, 0xac, 0xb7, 0x78, 0xb4, 0xc5, 0x67, 0x4f, 0xe7, 0xd6, 0xce, 0x6b, 0x1a, 0x06,
+	0x7e, 0xba, 0x9e, 0x0d, 0xb5, 0xd9, 0xb4, 0x22, 0xf9, 0x11, 0xf8, 0xa5, 0x2e, 0xbe, 0x90, 0xc7,
+	0x0c, 0xf8, 0x67, 0xd2, 0x25, 0xb9, 0x94, 0x0d, 0x58, 0x76, 0x7c, 0x2e, 0xf2, 0x1b, 0xbf, 0x0f,
+	0x81, 0x57, 0xb1, 0x8e, 0x19, 0x1c, 0x34, 0x74, 0x9a, 0x04, 0x5d, 0x3f, 0x6f, 0xdd, 0xf3, 0xad,
+	0x7b, 0xfe, 0xc6, 0x6c, 0x54, 0x50, 0x48, 0x09, 0x0f, 0x46, 0x75, 0x45, 0xc6, 0x5f, 0x98, 0xba,
+	0x32, 0x84, 0x08, 0x07, 0x46, 0x2f, 0x28, 0xbc, 0xd0, 0x55, 0xe1, 0x2c, 0x3f, 0x81, 0x78, 0xaf,
+	0x17, 0x74, 0x45, 0xee, 0x9a, 0x5c, 0xd4, 0x9d, 0x02, 0x5f, 0x51, 0xe1, 0xc8, 0x47, 0x65, 0x44,
+	0x0d, 0xef, 0x68, 0x5e, 0x59, 0x13, 0xde, 0xee, 0xaa, 0x88, 0xf0, 0x0c, 0x8e, 0x0a, 0xbd, 0xd4,
+	0x45, 0xe5, 0x37, 0x69, 0x67, 0xc0, 0xb2, 0xfb, 0xea, 0x06, 0xcb, 0xd7, 0x70, 0xb2, 0xf3, 0xbf,
+	0xf2, 0xda, 0x79, 0xec, 0x41, 0x32, 0x19, 0x47, 0xeb, 0x64, 0x32, 0xc6, 0x14, 0x0e, 0x8b, 0xd0,
+	0xe6, 0x2a, 0x4d, 0x06, 0x9d, 0xac, 0xab, 0xb6, 0x50, 0x3e, 0x83, 0x93, 0x76, 0x80, 0xc6, 0xe2,
+	0x9d, 0x5d, 0x9b, 0xf2, 0xee, 0x65, 0xf9, 0x02, 0x1e, 0xee, 0x24, 0x8a, 0xbe, 0xae, 0x69, 0x75,
+	0xbb, 0x51, 0x76, 0xbb, 0x51, 0x89, 0x20, 0x76, 0xe2, 0x91, 0x36, 0x05, 0xd5, 0xf2, 0x37, 0x03,
+	0xde, 0x26, 0x8c, 0x02, 0x3a, 0x45, 0x55, 0xc6, 0x3b, 0xcd, 0x11, 0x87, 0xc0, 0xed, 0x72, 0x64,
+	0x4b, 0x0a, 0x13, 0xf7, 0xce, 0x9f, 0xdc, 0xdd, 0x4a, 0x7e, 0x11, 0xca, 0x2a, 0xca, 0xe4, 0x77,
+	0x06, 0xbc, 0xa5, 0xf0, 0x18, 0x0e, 0x27, 0xe6, 0x5a, 0xd7, 0x55, 0x29, 0xee, 0xa1, 0xf8, 0x7b,
+	0x15, 0xa2, 0xc4, 0xfe, 0x7e, 0xf0, 0x82, 0xf0, 0xd1, 0x5e, 0x5c, 0x62, 0x86, 0xa7, 0xff, 0x98,
+	0x51, 0xfc, 0x60, 0xf8, 0x78, 0x7f, 0x1c, 0xf1, 0x93, 0x61, 0x7f, 0x2f, 0x35, 0xf1, 0x8b, 0x3d,
+	0x7f, 0x05, 0xfc, 0xd2, 0xd1, 0x4c, 0x4f, 0xff, 0xd3, 0x58, 0x5b, 0x14, 0xac, 0x29, 0x8f, 0x69,
+	0x61, 0xdf, 0xda, 0x6f, 0x22, 0x99, 0xf2, 0xf0, 0xad, 0x5e, 0xfe, 0x09, 0x00, 0x00, 0xff, 0xff,
+	0xe6, 0xea, 0xec, 0x87, 0xde, 0x02, 0x00, 0x00,
 }
