@@ -18,19 +18,15 @@ type gameServer struct {
 	conn     *websocket.Conn
 	id       string
 	region   string
-	seats    []string
+	seats    []*gamedata.ClientConnection
 	capacity int32
-}
-
-type client struct {
-	conn *websocket.Conn
 }
 
 var upgrader = websocket.Upgrader{}
 
 var clientPacketQueue []gamedata.Packet
-var clientWebSocketMap map[string]*client
-var clientMatchMap map[*client]string
+var clientWebSocketMap map[string]*websocket.Conn
+var clientMatchMap map[*websocket.Conn]string
 
 var gameServerWebSocketMap map[string]*gameServer
 var gameServerPacketQueue []gamedata.Packet
@@ -44,8 +40,8 @@ type WebSocketServer struct {
 // New initializes a new web socket server without starting it
 func New(ip string, port string) *WebSocketServer {
 	clientPacketQueue = make([]gamedata.Packet, 0)
-	clientWebSocketMap = make(map[string]*client)
-	clientMatchMap = make(map[*client]string)
+	clientWebSocketMap = make(map[string]*websocket.Conn)
+	clientMatchMap = make(map[*websocket.Conn]string)
 
 	gameServerPacketQueue = make([]gamedata.Packet, 0)
 	gameServerWebSocketMap = make(map[string]*gameServer)
@@ -109,7 +105,7 @@ func sending() {
 		time.Sleep(time.Millisecond)
 		for _, p := range clientPacketQueue {
 			if c, ok := clientWebSocketMap[p.Header.Cid]; ok {
-				send(p, c.conn)
+				send(p, c)
 				clientPacketQueue = nil
 			}
 		}
@@ -117,7 +113,6 @@ func sending() {
 		for _, p := range gameServerPacketQueue {
 			if c, ok := gameServerWebSocketMap[p.Header.Cid]; ok {
 				send(p, c.conn)
-				fmt.Println(p)
 				gameServerPacketQueue = nil
 			}
 		}
@@ -149,7 +144,7 @@ func handlePacket(c *websocket.Conn, p *gamedata.Packet) {
 					},
 				}
 
-				gameServerWebSocketMap[id.String()] = &gameServer{id: id.String(), conn: c, region: gameServerJoined.Region, capacity: gameServerJoined.Capacity, seats: make([]string, 0)}
+				gameServerWebSocketMap[id.String()] = &gameServer{id: id.String(), conn: c, region: gameServerJoined.Region, capacity: gameServerJoined.Capacity, seats: make([]*gamedata.ClientConnection, 0)}
 				gameServerPacketQueue = append(gameServerPacketQueue, packet)
 			}
 		}
@@ -179,7 +174,7 @@ func handlePacket(c *websocket.Conn, p *gamedata.Packet) {
 				Data: data,
 			}
 
-			clientWebSocketMap[id.String()] = &client{conn: c}
+			clientWebSocketMap[id.String()] = c
 			clientPacketQueue = append(clientPacketQueue, packet)
 		}
 		break
@@ -195,7 +190,7 @@ func handlePacket(c *websocket.Conn, p *gamedata.Packet) {
 				}
 				for _, g := range gameServerWebSocketMap {
 					if g.region == clientGameRequest.Region {
-						g.seats = append(g.seats, p.Header.Cid)
+						g.seats = append(g.seats, &gamedata.ClientConnection{ID: p.Header.Cid, Address: c.RemoteAddr().String()})
 						if len(g.seats) == int(g.capacity) {
 							gameServerStart := &gamedata.GameServerStart{}
 							gameServerStart.Clients = g.seats
@@ -247,8 +242,8 @@ func handlePacket(c *websocket.Conn, p *gamedata.Packet) {
 					break
 				}
 
-				for _, cid := range gameServerStart.Clients {
-					if c, ok := clientWebSocketMap[cid]; ok {
+				for _, cc := range gameServerStart.Clients {
+					if c, ok := clientWebSocketMap[cc.ID]; ok {
 						clientMatchMap[c] = gameServerStart.ID
 
 						clientGameFound := &gamedata.ClientGameFound{}
@@ -262,7 +257,7 @@ func handlePacket(c *websocket.Conn, p *gamedata.Packet) {
 						packet := gamedata.Packet{
 							Header: &gamedata.Header{
 								OpCode: gamedata.Header_ClientGameFound,
-								Cid:    cid,
+								Cid:    cc.ID,
 							},
 							Data: data,
 						}

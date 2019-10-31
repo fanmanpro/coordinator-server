@@ -9,8 +9,8 @@ import "github.com/fanmanpro/coordinator-server/ws"
 //)
 
 func main() {
-	ip := "127.0.0.1"
-	port := "6000"
-	wsServer := ws.New(ip, port)
+	localIP := "127.0.0.1"
+	localPort := "1540"
+	wsServer := ws.New(localIP, localPort)
 	wsServer.Start()
 }
