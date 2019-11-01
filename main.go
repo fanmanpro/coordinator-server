@@ -1,6 +1,9 @@
 package main
 
-import "github.com/fanmanpro/coordinator-server/ws"
+import (
+	"github.com/fanmanpro/coordinator-server/coordinator"
+	"github.com/fanmanpro/coordinator-server/ws"
+)
 
 //var (
 //	clients      map[int32]*Client
@@ -9,8 +12,10 @@ import "github.com/fanmanpro/coordinator-server/ws"
 //)
 
 func main() {
+	coordinator := coordinator.NewCoordinator()
+
 	localIP := "127.0.0.1"
 	localPort := "1540"
-	wsServer := ws.New(localIP, localPort)
+	wsServer := ws.NewWebSocketServer(coordinator, localIP, localPort, 1)
 	wsServer.Start()
 }
