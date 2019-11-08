@@ -32,7 +32,6 @@ type gameServer struct {
 
 var upgrader = websocket.Upgrader{}
 
-//var clientPacketQueue []gamedata.Packet
 var clientWebSocketMap map[string]*websocket.Conn
 var clientMatchMap map[*websocket.Conn]string
 
@@ -47,104 +46,66 @@ type WebSocketServer struct {
 	workerPool  *worker.Pool
 }
 
-// NewServer initializes a new web socket server without starting it
+// NewWebSocketServer initializes a new web socket server without starting it
 func NewWebSocketServer(co *coordinator.Coordinator, ip string, port string, capacity int) *WebSocketServer {
-
-	//clientPacketQueue = make([]gamedata.Packet, 0)
 	clientWebSocketMap = make(map[string]*websocket.Conn)
 	clientMatchMap = make(map[*websocket.Conn]string)
 	ws := &WebSocketServer{co, ip, port, worker.NewPool(5, 100)}
-	//for i := 0; i < cap(clients); i++ {
-	//	go ws.processClient(<-clients)
-	//}
-
-	//gameServerPacketQueue = make([]gamedata.Packet, 0)
-	//gameServerWebSocketMap = make(map[string]*gameServer)
+	gameServerWebSocketMap = make(map[string]*gameServer)
 	return ws
 }
 
 // Start starts the already intialized WebSocketServer
 func (w *WebSocketServer) Start() {
-	http.HandleFunc("/", w.connect)
+	http.HandleFunc("/", w.processClient)
 
 	w.workerPool.Start()
-	//go sending()
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("%v:%v", w.ip, w.port), nil))
 }
 
-func (w *WebSocketServer) connect(wr http.ResponseWriter, rq *http.Request) {
+func (w *WebSocketServer) processClient(wr http.ResponseWriter, rq *http.Request) {
 	c, err := upgrader.Upgrade(wr, rq, nil)
 	if err != nil {
 		log.Print("upgrade:", err)
 		return
-
 	}
+
+	defer c.Close()
+
 	disconnected := make(chan bool, 1)
-
-	disconnected <- false
-	for {
-		mt, data, err := c.ReadMessage()
-		if err != nil {
-			log.Printf("err: %v", err)
-			disconnected <- true
+	go func() {
+		for {
+			log.Printf("waiting for packet")
+			mt, data, err := c.ReadMessage()
+			if err != nil {
+				log.Printf("err: %v", err)
+				disconnected <- true
+			}
+			if mt == websocket.BinaryMessage {
+				err := w.workerPool.ScheduleJob(
+					func() error {
+						packet := &gamedata.Packet{}
+						err = proto.Unmarshal(data, packet)
+						if err != nil {
+							panic(err)
+						}
+						log.Printf("receiving packet %v from %v", packet.Header.OpCode, packet.Header.Cid)
+						log.Printf("recv: %s", packet.Header.OpCode)
+						return w.handlePacket(c, packet)
+					},
+				)
+				if err != nil {
+					log.Printf("err: %s", err)
+				}
+			}
 		}
-		if mt == websocket.BinaryMessage {
-			w.workerPool.ScheduleJob(
-				func() error {
-					packet := &gamedata.Packet{}
-					err = proto.Unmarshal(data, packet)
-					if err != nil {
-						panic(err)
-					}
-					log.Printf("recv: %s", packet.Header.OpCode)
-					return w.handlePacket(c, packet)
-				},
-			)
-		}
-	}
-
-	fmt.Println("end")
+	}()
 	<-disconnected
-	c.Close()
-	//clients <- c
-	//disconnected := make(chan bool, 1)
-
-	//go func() {
-	//	disconnected <- w.processClient(c)
-	//}()
-
-	//<-disconnected
 	fmt.Println("Client disconnected")
-	//disconnected := make(chan bool, u.gameServer.Capacity())
-	//simulation := make(chan *net.UDPAddr, 1)
-	//receiving(c)
-}
-func (w *WebSocketServer) processClient(c *websocket.Conn) bool {
-	c.SetCloseHandler(func(code int, text string) error {
-		//return true
-		return errors.New("asdas")
-	})
-	return true
-}
-
-func receiving(c *websocket.Conn) {
-	defer func(c *websocket.Conn) {
-		defer c.Close()
-		fmt.Printf("%+v\n", c)
-		if id, ok := clientMatchMap[c]; ok {
-			delete(clientWebSocketMap, clientMatchMap[c])
-			delete(clientMatchMap, c)
-			log.Printf("disc: client: %v", id)
-			return
-		}
-		// since its not a client it must be a game server. but PLEASE PLEASE don't do it this way
-		// have a map for the conn of each game server and delete it like above, instead of the make
-		gameServerWebSocketMap = make(map[string]*gameServer, 0)
-		log.Printf("disc: gameserver")
-	}(c)
 }
 
 func (w *WebSocketServer) send(p gamedata.Packet, c *websocket.Conn) error {
+	log.Printf("sending packet %v over connection %v to %v from %v", p.Header.OpCode, p.Header.Cid, c.RemoteAddr().String(), c.LocalAddr().String())
 	data, err := proto.Marshal(&p)
 	if err != nil {
 		return err
@@ -153,30 +114,10 @@ func (w *WebSocketServer) send(p gamedata.Packet, c *websocket.Conn) error {
 	err = c.WriteMessage(websocket.BinaryMessage, data)
 	if err != nil {
 		return err
-	} else {
-		log.Printf("sent: %v", p.Header.OpCode)
-		return nil
 	}
+	log.Printf("sent: %v", p.Header.OpCode)
+	return nil
 }
-
-//func sending() {
-//	for {
-//		time.Sleep(time.Millisecond)
-//		for _, p := range clientPacketQueue {
-//			if c, ok := clientWebSocketMap[p.Header.Cid]; ok {
-//				send(p, c)
-//				clientPacketQueue = nil
-//			}
-//		}
-//
-//		for _, p := range gameServerPacketQueue {
-//			if c, ok := gameServerWebSocketMap[p.Header.Cid]; ok {
-//				send(p, c.conn)
-//				gameServerPacketQueue = nil
-//			}
-//		}
-//	}
-//}
 
 func (w *WebSocketServer) handlePacket(c *websocket.Conn, p *gamedata.Packet) error {
 	switch p.Header.OpCode {
@@ -186,7 +127,6 @@ func (w *WebSocketServer) handlePacket(c *websocket.Conn, p *gamedata.Packet) er
 			// a reminder that the ClientJoined message comming from the client's first connection doesn't have a Data object of type Any
 			err := ptypes.UnmarshalAny(p.Data, gameServerJoined)
 			if err != nil {
-				//log.Printf("err: invalid %v data. err: %v", gamedata.Header_GameServerOnline, err)
 				return err
 			}
 
@@ -203,10 +143,11 @@ func (w *WebSocketServer) handlePacket(c *websocket.Conn, p *gamedata.Packet) er
 				}
 
 				gameServerWebSocketMap[id.String()] = &gameServer{id: id.String(), conn: c, region: gameServerJoined.Region, capacity: gameServerJoined.Capacity, seats: make([]*gamedata.ClientConnection, 0)}
-				gameServerPacketQueue = append(gameServerPacketQueue, packet)
+				//fmt.Printf("%+v\n", &gameServer{id: id.String(), conn: c, region: gameServerJoined.Region, capacity: gameServerJoined.Capacity, seats: make([]*gamedata.ClientConnection, 0)})
+				return w.workerPool.ScheduleJob(func() error { return w.send(packet, c) })
 			}
+			return errors.New(fmt.Sprintf("Invalid game server"))
 		}
-		break
 	case gamedata.Header_ClientOnline:
 		{
 			clientOnline := &gamedata.ClientOnline{}
@@ -233,9 +174,7 @@ func (w *WebSocketServer) handlePacket(c *websocket.Conn, p *gamedata.Packet) er
 			clientWebSocketMap[id.String()] = c
 
 			return w.workerPool.ScheduleJob(func() error { return w.send(packet, c) })
-			//clientPacketQueue = append(clientPacketQueue, packet)
 		}
-		break
 	case gamedata.Header_ClientGameRequest:
 		{
 			if _, ok := clientWebSocketMap[p.Header.Cid]; ok {
@@ -263,30 +202,14 @@ func (w *WebSocketServer) handlePacket(c *websocket.Conn, p *gamedata.Packet) er
 								},
 								Data: data,
 							}
-							gameServerPacketQueue = append(gameServerPacketQueue, packet)
+							//gameServerPacketQueue = append(gameServerPacketQueue, packet)
+							return w.workerPool.ScheduleJob(func() error { return w.send(packet, g.conn) })
 						}
 					}
 				}
-
-				//if gameServerJoined.Secret == "fanmanpro" {
-				//id, err := uuid.NewUUID()
-				//if err != nil {
-				//	log.Printf("err: could not generate uuid. %v", err)
-				//	break
-				//}
-				//packet := gamedata.Packet{
-				//	Header: &gamedata.Header{
-				//		OpCode: opCode,
-				//		Cid:    id.String(),
-				//	},
-				//}
-
-				//gameServerWebSocketMap[id.String()] = c
-				//gameServerPacketQueue = append(gameServerPacketQueue, packet)
-				//}
 			}
+			return errors.New(fmt.Sprintf("No game servers available for client to join"))
 		}
-		break
 	case gamedata.Header_GameServerStart:
 		{
 			if _, ok := gameServerWebSocketMap[p.Header.Cid]; ok {
@@ -315,19 +238,15 @@ func (w *WebSocketServer) handlePacket(c *websocket.Conn, p *gamedata.Packet) er
 							},
 							Data: data,
 						}
-						//errchan := make(chan error, 1)
-						//w.workerPool.ScheduleJob(worker.NewJob(func() error {
-						//	errchan <- w.send(packet, c)
-						//	return nil
-						//}))
 						return w.workerPool.ScheduleJob(func() error { return w.send(packet, c) })
-						//return <-errchan
-						//clientPacketQueue = append(clientPacketQueue, packet)
 					}
 				}
 			}
+			return errors.New(fmt.Sprintf("Game server not available anymore"))
 		}
-		break
+	default:
+		{
+			return errors.New(fmt.Sprintf("Packet received but unknown handler for %v", p.Header.OpCode))
+		}
 	}
-	return errors.New(fmt.Sprintf("Packet received but unknown handler for %v", p.Header.OpCode))
 }

@@ -1,7 +1,5 @@
 package worker
 
-import "fmt"
-
 var id int
 
 type Worker struct {
@@ -30,9 +28,7 @@ func (w *Worker) Start() {
 				// Receive a work request.
 				//fmt.Printf("worker%d: Received work request:%v\n", w.id, work.Name)
 				err := work.Perform()
-				if err != nil {
-					fmt.Printf("err: %v\n", err)
-				}
+				work.errchan <- err
 
 				//time.Sleep(work.Delay)
 				//fmt.Printf("worker%d: Hello, %s!\n", w.ID, work.Name)
