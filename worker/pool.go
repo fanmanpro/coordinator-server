@@ -1,5 +1,7 @@
 package worker
 
+import "log"
+
 type Pool struct {
 	workerCap   int
 	jobQueueCap int
@@ -13,7 +15,7 @@ func NewPool(wc int, jqc int) *Pool {
 
 func (p *Pool) Start() {
 	for i := 0; i < cap(p.WorkerQueue); i++ {
-		//log.Printf("Starting Worker (%v)\n", i)
+		log.Printf("Starting Worker (%v)\n", i)
 		worker := NewWorker(p) // NewWorker(i+1, WorkerQueue)
 		worker.Start()
 	}
@@ -21,10 +23,10 @@ func (p *Pool) Start() {
 		for {
 			select {
 			case job := <-p.JobQueue:
-				//log.Println("Received Job")
+				log.Println("Received Job")
 				go func() {
 					worker := <-p.WorkerQueue
-					//log.Println("Dispatching Job")
+					log.Println("Dispatching Job")
 					worker <- job
 				}()
 			}

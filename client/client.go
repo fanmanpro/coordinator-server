@@ -14,6 +14,7 @@ type Client struct {
 type UDPClient struct {
 	Client  *Client
 	UDPAddr *net.UDPAddr
+	Send    chan *[]byte
 }
 type WSClient struct {
 	Client *Client
