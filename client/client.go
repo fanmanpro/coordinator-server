@@ -3,6 +3,7 @@ package client
 import (
 	"net"
 
+	"github.com/fanmanpro/coordinator-server/gamedata"
 	"github.com/gorilla/websocket"
 )
 
@@ -14,7 +15,7 @@ type Client struct {
 type UDPClient struct {
 	Client  *Client
 	UDPAddr *net.UDPAddr
-	Send    chan *[]byte
+	Send    chan gamedata.Packet
 }
 type WSClient struct {
 	Client *Client

@@ -1,7 +1,5 @@
 package worker
 
-import "log"
-
 type Pool struct {
 	workerCap   int
 	jobQueueCap int
@@ -10,12 +8,12 @@ type Pool struct {
 }
 
 func NewPool(wc int, jqc int) *Pool {
-	return &Pool{wc, jqc, make(chan *Job, 100), make(chan chan *Job, 5)}
+	return &Pool{wc, jqc, make(chan *Job, 100), make(chan chan *Job, 10)}
 }
 
 func (p *Pool) Start() {
 	for i := 0; i < cap(p.WorkerQueue); i++ {
-		log.Printf("Starting Worker (%v)\n", i)
+		//log.Printf("Starting Worker (%v)\n", i)
 		worker := NewWorker(p) // NewWorker(i+1, WorkerQueue)
 		worker.Start()
 	}
@@ -23,10 +21,10 @@ func (p *Pool) Start() {
 		for {
 			select {
 			case job := <-p.JobQueue:
-				log.Println("Received Job")
+				//log.Println("Received Job")
 				go func() {
 					worker := <-p.WorkerQueue
-					log.Println("Dispatching Job")
+					//log.Println("Dispatching Job")
 					worker <- job
 				}()
 			}
@@ -34,9 +32,9 @@ func (p *Pool) Start() {
 	}()
 }
 
-func (p *Pool) ScheduleJob(fn func() error) error {
-	errchan := make(chan error, 1)
-	job := NewJob(fn, errchan)
+func (p *Pool) ScheduleJob(fn func(chan error)) {
+	//log.Println("Scheduling Job")
+	job := NewJob(fn)
 	p.JobQueue <- job
-	return <-errchan
+	//return job.errChan
 }

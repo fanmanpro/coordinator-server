@@ -27,8 +27,8 @@ func (w *Worker) Start() {
 			case work := <-w.jobQueue:
 				// Receive a work request.
 				//fmt.Printf("worker%d: Received work request:%v\n", w.id, work.Name)
-				err := work.Perform()
-				work.errchan <- err
+				work.Perform()
+				//log.Println("Worker Performed Job")
 
 				//time.Sleep(work.Delay)
 				//fmt.Printf("worker%d: Hello, %s!\n", w.ID, work.Name)

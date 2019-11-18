@@ -16,6 +16,6 @@ func main() {
 
 	localIP := "127.0.0.1"
 	localPort := "1540"
-	wsServer := ws.NewWebSocketServer(coordinator, localIP, localPort, 1)
+	wsServer := ws.NewWebSocketServer(coordinator, localIP, localPort)
 	wsServer.Start()
 }
