@@ -113,6 +113,8 @@ func (w *WebSocketServer) processClient(wr http.ResponseWriter, rq *http.Request
 						errChan <- w.handlePacket(c, packet)
 					},
 				)
+			} else if mt == websocket.TextMessage {
+				err = c.WriteMessage(websocket.TextMessage, []byte("Hey"))
 			}
 		}
 	}()

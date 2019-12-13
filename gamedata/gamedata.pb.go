@@ -68,83 +68,69 @@ func (x Force_ForceMode) String() string {
 }
 
 func (Force_ForceMode) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_38d51a89ffb18ac9, []int{15, 0}
+	return fileDescriptor_38d51a89ffb18ac9, []int{8, 0}
 }
 
+// this is a connection id that expires once the coordinator connection is
+// lost
 type Header_OpCode int32
 
 const (
 	Header_Invalid Header_OpCode = 0
-	// (A.1) client informs game server of successful connection to
-	// coordinator
-	Header_ClientOnline      Header_OpCode = 100
-	Header_GameServerOnline  Header_OpCode = 101
-	Header_GameServerStart   Header_OpCode = 102
-	Header_ClientGameRequest Header_OpCode = 200
-	Header_ClientGameCancel  Header_OpCode = 201
-	Header_ClientGameFound   Header_OpCode = 202
-	// (A.5) (FixedUpdate) sim server sends existing client game object's
-	// delta to game server
-	// (B.3) (FixedUpdate) game server sends existing game object's delta to
-	// all clients
-	Header_ClientJoin       Header_OpCode = 300
-	Header_ClientJoined     Header_OpCode = 301
-	Header_SimulationJoin   Header_OpCode = 302
-	Header_SimulationJoined Header_OpCode = 303
-	Header_SimulationState  Header_OpCode = 304
+	// Bi-directionally inform a connection closure
+	Header_ClientDisconnect Header_OpCode = 100
+	// Connection is established, not client asks to be accepted
+	Header_ClientAppeal Header_OpCode = 101
+	// Server trusts client, so inform client
+	Header_ClientTrust           Header_OpCode = 102
+	Header_ClientDatagramAddress Header_OpCode = 104
+	// Partial seat packet sent to simulation, complete packet sent in return to ALL player clients
+	Header_ClientSeat Header_OpCode = 103
+	// Current context of simulated objects at a certain time
+	Header_Context Header_OpCode = 200
 	// Object creation
-	Header_GameObject Header_OpCode = 400
-	Header_Rigidbody  Header_OpCode = 401
+	Header_GameObject Header_OpCode = 300
+	Header_Rigidbody  Header_OpCode = 301
 	// Object updates
-	Header_Position Header_OpCode = 500
-	Header_Rotation Header_OpCode = 501
-	Header_Scale    Header_OpCode = 502
-	Header_Velocity Header_OpCode = 503
-	Header_Force    Header_OpCode = 504
+	Header_Position Header_OpCode = 400
+	Header_Rotation Header_OpCode = 401
+	Header_Scale    Header_OpCode = 402
+	Header_Velocity Header_OpCode = 403
+	Header_Force    Header_OpCode = 404
 )
 
 var Header_OpCode_name = map[int32]string{
 	0:   "Invalid",
-	100: "ClientOnline",
-	101: "GameServerOnline",
-	102: "GameServerStart",
-	200: "ClientGameRequest",
-	201: "ClientGameCancel",
-	202: "ClientGameFound",
-	300: "ClientJoin",
-	301: "ClientJoined",
-	302: "SimulationJoin",
-	303: "SimulationJoined",
-	304: "SimulationState",
-	400: "GameObject",
-	401: "Rigidbody",
-	500: "Position",
-	501: "Rotation",
-	502: "Scale",
-	503: "Velocity",
-	504: "Force",
+	100: "ClientDisconnect",
+	101: "ClientAppeal",
+	102: "ClientTrust",
+	104: "ClientDatagramAddress",
+	103: "ClientSeat",
+	200: "Context",
+	300: "GameObject",
+	301: "Rigidbody",
+	400: "Position",
+	401: "Rotation",
+	402: "Scale",
+	403: "Velocity",
+	404: "Force",
 }
 
 var Header_OpCode_value = map[string]int32{
-	"Invalid":           0,
-	"ClientOnline":      100,
-	"GameServerOnline":  101,
-	"GameServerStart":   102,
-	"ClientGameRequest": 200,
-	"ClientGameCancel":  201,
-	"ClientGameFound":   202,
-	"ClientJoin":        300,
-	"ClientJoined":      301,
-	"SimulationJoin":    302,
-	"SimulationJoined":  303,
-	"SimulationState":   304,
-	"GameObject":        400,
-	"Rigidbody":         401,
-	"Position":          500,
-	"Rotation":          501,
-	"Scale":             502,
-	"Velocity":          503,
-	"Force":             504,
+	"Invalid":               0,
+	"ClientDisconnect":      100,
+	"ClientAppeal":          101,
+	"ClientTrust":           102,
+	"ClientDatagramAddress": 104,
+	"ClientSeat":            103,
+	"Context":               200,
+	"GameObject":            300,
+	"Rigidbody":             301,
+	"Position":              400,
+	"Rotation":              401,
+	"Scale":                 402,
+	"Velocity":              403,
+	"Force":                 404,
 }
 
 func (x Header_OpCode) String() string {
@@ -152,15 +138,16 @@ func (x Header_OpCode) String() string {
 }
 
 func (Header_OpCode) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_38d51a89ffb18ac9, []int{17, 0}
+	return fileDescriptor_38d51a89ffb18ac9, []int{10, 0}
 }
 
 type Packet struct {
-	Header               *Header  `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
-	Data                 *any.Any `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	OpCode               Header_OpCode `protobuf:"varint,1,opt,name=opCode,proto3,enum=gamedata.Header_OpCode" json:"opCode,omitempty"`
+	Data                 *any.Any      `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
+	Cid                  string        `protobuf:"bytes,3,opt,name=cid,proto3" json:"cid,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
+	XXX_unrecognized     []byte        `json:"-"`
+	XXX_sizecache        int32         `json:"-"`
 }
 
 func (m *Packet) Reset()         { *m = Packet{} }
@@ -188,11 +175,11 @@ func (m *Packet) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Packet proto.InternalMessageInfo
 
-func (m *Packet) GetHeader() *Header {
+func (m *Packet) GetOpCode() Header_OpCode {
 	if m != nil {
-		return m.Header
+		return m.OpCode
 	}
-	return nil
+	return Header_Invalid
 }
 
 func (m *Packet) GetData() *any.Any {
@@ -202,160 +189,58 @@ func (m *Packet) GetData() *any.Any {
 	return nil
 }
 
-type ClientJoin struct {
-	Owns                 string   `protobuf:"bytes,1,opt,name=owns,proto3" json:"owns,omitempty"`
+func (m *Packet) GetCid() string {
+	if m != nil {
+		return m.Cid
+	}
+	return ""
+}
+
+type ClientSeat struct {
+	// CID of client that is assigned to this seat
+	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
+	// GUID of the object this seat is on
+	Guid                 string   `protobuf:"bytes,2,opt,name=guid,proto3" json:"guid,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *ClientJoin) Reset()         { *m = ClientJoin{} }
-func (m *ClientJoin) String() string { return proto.CompactTextString(m) }
-func (*ClientJoin) ProtoMessage()    {}
-func (*ClientJoin) Descriptor() ([]byte, []int) {
+func (m *ClientSeat) Reset()         { *m = ClientSeat{} }
+func (m *ClientSeat) String() string { return proto.CompactTextString(m) }
+func (*ClientSeat) ProtoMessage()    {}
+func (*ClientSeat) Descriptor() ([]byte, []int) {
 	return fileDescriptor_38d51a89ffb18ac9, []int{1}
 }
 
-func (m *ClientJoin) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ClientJoin.Unmarshal(m, b)
+func (m *ClientSeat) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ClientSeat.Unmarshal(m, b)
 }
-func (m *ClientJoin) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ClientJoin.Marshal(b, m, deterministic)
+func (m *ClientSeat) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ClientSeat.Marshal(b, m, deterministic)
 }
-func (m *ClientJoin) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ClientJoin.Merge(m, src)
+func (m *ClientSeat) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClientSeat.Merge(m, src)
 }
-func (m *ClientJoin) XXX_Size() int {
-	return xxx_messageInfo_ClientJoin.Size(m)
+func (m *ClientSeat) XXX_Size() int {
+	return xxx_messageInfo_ClientSeat.Size(m)
 }
-func (m *ClientJoin) XXX_DiscardUnknown() {
-	xxx_messageInfo_ClientJoin.DiscardUnknown(m)
+func (m *ClientSeat) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClientSeat.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_ClientJoin proto.InternalMessageInfo
+var xxx_messageInfo_ClientSeat proto.InternalMessageInfo
 
-func (m *ClientJoin) GetOwns() string {
+func (m *ClientSeat) GetOwner() string {
 	if m != nil {
-		return m.Owns
+		return m.Owner
 	}
 	return ""
 }
 
-type SimulationJoin struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *SimulationJoin) Reset()         { *m = SimulationJoin{} }
-func (m *SimulationJoin) String() string { return proto.CompactTextString(m) }
-func (*SimulationJoin) ProtoMessage()    {}
-func (*SimulationJoin) Descriptor() ([]byte, []int) {
-	return fileDescriptor_38d51a89ffb18ac9, []int{2}
-}
-
-func (m *SimulationJoin) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_SimulationJoin.Unmarshal(m, b)
-}
-func (m *SimulationJoin) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_SimulationJoin.Marshal(b, m, deterministic)
-}
-func (m *SimulationJoin) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SimulationJoin.Merge(m, src)
-}
-func (m *SimulationJoin) XXX_Size() int {
-	return xxx_messageInfo_SimulationJoin.Size(m)
-}
-func (m *SimulationJoin) XXX_DiscardUnknown() {
-	xxx_messageInfo_SimulationJoin.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_SimulationJoin proto.InternalMessageInfo
-
-type ClientConnection struct {
-	// id of client to accept packets from
-	ID string `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	// address of the client packets should be coming from
-	Address              string   `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *ClientConnection) Reset()         { *m = ClientConnection{} }
-func (m *ClientConnection) String() string { return proto.CompactTextString(m) }
-func (*ClientConnection) ProtoMessage()    {}
-func (*ClientConnection) Descriptor() ([]byte, []int) {
-	return fileDescriptor_38d51a89ffb18ac9, []int{3}
-}
-
-func (m *ClientConnection) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ClientConnection.Unmarshal(m, b)
-}
-func (m *ClientConnection) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ClientConnection.Marshal(b, m, deterministic)
-}
-func (m *ClientConnection) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ClientConnection.Merge(m, src)
-}
-func (m *ClientConnection) XXX_Size() int {
-	return xxx_messageInfo_ClientConnection.Size(m)
-}
-func (m *ClientConnection) XXX_DiscardUnknown() {
-	xxx_messageInfo_ClientConnection.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ClientConnection proto.InternalMessageInfo
-
-func (m *ClientConnection) GetID() string {
+func (m *ClientSeat) GetGuid() string {
 	if m != nil {
-		return m.ID
-	}
-	return ""
-}
-
-func (m *ClientConnection) GetAddress() string {
-	if m != nil {
-		return m.Address
-	}
-	return ""
-}
-
-type ClientOnline struct {
-	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *ClientOnline) Reset()         { *m = ClientOnline{} }
-func (m *ClientOnline) String() string { return proto.CompactTextString(m) }
-func (*ClientOnline) ProtoMessage()    {}
-func (*ClientOnline) Descriptor() ([]byte, []int) {
-	return fileDescriptor_38d51a89ffb18ac9, []int{4}
-}
-
-func (m *ClientOnline) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ClientOnline.Unmarshal(m, b)
-}
-func (m *ClientOnline) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ClientOnline.Marshal(b, m, deterministic)
-}
-func (m *ClientOnline) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ClientOnline.Merge(m, src)
-}
-func (m *ClientOnline) XXX_Size() int {
-	return xxx_messageInfo_ClientOnline.Size(m)
-}
-func (m *ClientOnline) XXX_DiscardUnknown() {
-	xxx_messageInfo_ClientOnline.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ClientOnline proto.InternalMessageInfo
-
-func (m *ClientOnline) GetName() string {
-	if m != nil {
-		return m.Name
+		return m.Guid
 	}
 	return ""
 }
@@ -373,7 +258,7 @@ func (m *GameServerOnline) Reset()         { *m = GameServerOnline{} }
 func (m *GameServerOnline) String() string { return proto.CompactTextString(m) }
 func (*GameServerOnline) ProtoMessage()    {}
 func (*GameServerOnline) Descriptor() ([]byte, []int) {
-	return fileDescriptor_38d51a89ffb18ac9, []int{5}
+	return fileDescriptor_38d51a89ffb18ac9, []int{2}
 }
 
 func (m *GameServerOnline) XXX_Unmarshal(b []byte) error {
@@ -415,162 +300,6 @@ func (m *GameServerOnline) GetCapacity() int32 {
 	return 0
 }
 
-type GameServerStart struct {
-	ID                   string              `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	Clients              []*ClientConnection `protobuf:"bytes,2,rep,name=clients,proto3" json:"clients,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
-	XXX_unrecognized     []byte              `json:"-"`
-	XXX_sizecache        int32               `json:"-"`
-}
-
-func (m *GameServerStart) Reset()         { *m = GameServerStart{} }
-func (m *GameServerStart) String() string { return proto.CompactTextString(m) }
-func (*GameServerStart) ProtoMessage()    {}
-func (*GameServerStart) Descriptor() ([]byte, []int) {
-	return fileDescriptor_38d51a89ffb18ac9, []int{6}
-}
-
-func (m *GameServerStart) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_GameServerStart.Unmarshal(m, b)
-}
-func (m *GameServerStart) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_GameServerStart.Marshal(b, m, deterministic)
-}
-func (m *GameServerStart) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GameServerStart.Merge(m, src)
-}
-func (m *GameServerStart) XXX_Size() int {
-	return xxx_messageInfo_GameServerStart.Size(m)
-}
-func (m *GameServerStart) XXX_DiscardUnknown() {
-	xxx_messageInfo_GameServerStart.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_GameServerStart proto.InternalMessageInfo
-
-func (m *GameServerStart) GetID() string {
-	if m != nil {
-		return m.ID
-	}
-	return ""
-}
-
-func (m *GameServerStart) GetClients() []*ClientConnection {
-	if m != nil {
-		return m.Clients
-	}
-	return nil
-}
-
-type ClientGameFound struct {
-	ID                   string   `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *ClientGameFound) Reset()         { *m = ClientGameFound{} }
-func (m *ClientGameFound) String() string { return proto.CompactTextString(m) }
-func (*ClientGameFound) ProtoMessage()    {}
-func (*ClientGameFound) Descriptor() ([]byte, []int) {
-	return fileDescriptor_38d51a89ffb18ac9, []int{7}
-}
-
-func (m *ClientGameFound) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ClientGameFound.Unmarshal(m, b)
-}
-func (m *ClientGameFound) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ClientGameFound.Marshal(b, m, deterministic)
-}
-func (m *ClientGameFound) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ClientGameFound.Merge(m, src)
-}
-func (m *ClientGameFound) XXX_Size() int {
-	return xxx_messageInfo_ClientGameFound.Size(m)
-}
-func (m *ClientGameFound) XXX_DiscardUnknown() {
-	xxx_messageInfo_ClientGameFound.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ClientGameFound proto.InternalMessageInfo
-
-func (m *ClientGameFound) GetID() string {
-	if m != nil {
-		return m.ID
-	}
-	return ""
-}
-
-type ClientGameRequest struct {
-	Region               string   `protobuf:"bytes,1,opt,name=region,proto3" json:"region,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *ClientGameRequest) Reset()         { *m = ClientGameRequest{} }
-func (m *ClientGameRequest) String() string { return proto.CompactTextString(m) }
-func (*ClientGameRequest) ProtoMessage()    {}
-func (*ClientGameRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_38d51a89ffb18ac9, []int{8}
-}
-
-func (m *ClientGameRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ClientGameRequest.Unmarshal(m, b)
-}
-func (m *ClientGameRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ClientGameRequest.Marshal(b, m, deterministic)
-}
-func (m *ClientGameRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ClientGameRequest.Merge(m, src)
-}
-func (m *ClientGameRequest) XXX_Size() int {
-	return xxx_messageInfo_ClientGameRequest.Size(m)
-}
-func (m *ClientGameRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_ClientGameRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ClientGameRequest proto.InternalMessageInfo
-
-func (m *ClientGameRequest) GetRegion() string {
-	if m != nil {
-		return m.Region
-	}
-	return ""
-}
-
-type ClientGameCancel struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *ClientGameCancel) Reset()         { *m = ClientGameCancel{} }
-func (m *ClientGameCancel) String() string { return proto.CompactTextString(m) }
-func (*ClientGameCancel) ProtoMessage()    {}
-func (*ClientGameCancel) Descriptor() ([]byte, []int) {
-	return fileDescriptor_38d51a89ffb18ac9, []int{9}
-}
-
-func (m *ClientGameCancel) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ClientGameCancel.Unmarshal(m, b)
-}
-func (m *ClientGameCancel) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ClientGameCancel.Marshal(b, m, deterministic)
-}
-func (m *ClientGameCancel) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ClientGameCancel.Merge(m, src)
-}
-func (m *ClientGameCancel) XXX_Size() int {
-	return xxx_messageInfo_ClientGameCancel.Size(m)
-}
-func (m *ClientGameCancel) XXX_DiscardUnknown() {
-	xxx_messageInfo_ClientGameCancel.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ClientGameCancel proto.InternalMessageInfo
-
 // message NewClientGameObject {
 //    int32 ID = 1;
 //    Prefab prefab = 2;
@@ -593,7 +322,7 @@ func (m *SimulationState) Reset()         { *m = SimulationState{} }
 func (m *SimulationState) String() string { return proto.CompactTextString(m) }
 func (*SimulationState) ProtoMessage()    {}
 func (*SimulationState) Descriptor() ([]byte, []int) {
-	return fileDescriptor_38d51a89ffb18ac9, []int{10}
+	return fileDescriptor_38d51a89ffb18ac9, []int{3}
 }
 
 func (m *SimulationState) XXX_Unmarshal(b []byte) error {
@@ -642,7 +371,7 @@ func (m *GameObject) Reset()         { *m = GameObject{} }
 func (m *GameObject) String() string { return proto.CompactTextString(m) }
 func (*GameObject) ProtoMessage()    {}
 func (*GameObject) Descriptor() ([]byte, []int) {
-	return fileDescriptor_38d51a89ffb18ac9, []int{11}
+	return fileDescriptor_38d51a89ffb18ac9, []int{4}
 }
 
 func (m *GameObject) XXX_Unmarshal(b []byte) error {
@@ -706,7 +435,7 @@ func (m *Rigidbody) Reset()         { *m = Rigidbody{} }
 func (m *Rigidbody) String() string { return proto.CompactTextString(m) }
 func (*Rigidbody) ProtoMessage()    {}
 func (*Rigidbody) Descriptor() ([]byte, []int) {
-	return fileDescriptor_38d51a89ffb18ac9, []int{12}
+	return fileDescriptor_38d51a89ffb18ac9, []int{5}
 }
 
 func (m *Rigidbody) XXX_Unmarshal(b []byte) error {
@@ -775,7 +504,7 @@ func (m *Velocity) Reset()         { *m = Velocity{} }
 func (m *Velocity) String() string { return proto.CompactTextString(m) }
 func (*Velocity) ProtoMessage()    {}
 func (*Velocity) Descriptor() ([]byte, []int) {
-	return fileDescriptor_38d51a89ffb18ac9, []int{13}
+	return fileDescriptor_38d51a89ffb18ac9, []int{6}
 }
 
 func (m *Velocity) XXX_Unmarshal(b []byte) error {
@@ -830,7 +559,7 @@ func (m *Position) Reset()         { *m = Position{} }
 func (m *Position) String() string { return proto.CompactTextString(m) }
 func (*Position) ProtoMessage()    {}
 func (*Position) Descriptor() ([]byte, []int) {
-	return fileDescriptor_38d51a89ffb18ac9, []int{14}
+	return fileDescriptor_38d51a89ffb18ac9, []int{7}
 }
 
 func (m *Position) XXX_Unmarshal(b []byte) error {
@@ -886,7 +615,7 @@ func (m *Force) Reset()         { *m = Force{} }
 func (m *Force) String() string { return proto.CompactTextString(m) }
 func (*Force) ProtoMessage()    {}
 func (*Force) Descriptor() ([]byte, []int) {
-	return fileDescriptor_38d51a89ffb18ac9, []int{15}
+	return fileDescriptor_38d51a89ffb18ac9, []int{8}
 }
 
 func (m *Force) XXX_Unmarshal(b []byte) error {
@@ -947,7 +676,7 @@ func (m *Vector2) Reset()         { *m = Vector2{} }
 func (m *Vector2) String() string { return proto.CompactTextString(m) }
 func (*Vector2) ProtoMessage()    {}
 func (*Vector2) Descriptor() ([]byte, []int) {
-	return fileDescriptor_38d51a89ffb18ac9, []int{16}
+	return fileDescriptor_38d51a89ffb18ac9, []int{9}
 }
 
 func (m *Vector2) XXX_Unmarshal(b []byte) error {
@@ -983,21 +712,16 @@ func (m *Vector2) GetY() float32 {
 }
 
 type Header struct {
-	// this is a connection id that expires once the coordinator connection is
-	// lost
-	Cid                  string        `protobuf:"bytes,1,opt,name=cid,proto3" json:"cid,omitempty"`
-	OpCode               Header_OpCode `protobuf:"varint,2,opt,name=opCode,proto3,enum=gamedata.Header_OpCode" json:"opCode,omitempty"`
-	Origin               bool          `protobuf:"varint,3,opt,name=origin,proto3" json:"origin,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
-	XXX_unrecognized     []byte        `json:"-"`
-	XXX_sizecache        int32         `json:"-"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *Header) Reset()         { *m = Header{} }
 func (m *Header) String() string { return proto.CompactTextString(m) }
 func (*Header) ProtoMessage()    {}
 func (*Header) Descriptor() ([]byte, []int) {
-	return fileDescriptor_38d51a89ffb18ac9, []int{17}
+	return fileDescriptor_38d51a89ffb18ac9, []int{10}
 }
 
 func (m *Header) XXX_Unmarshal(b []byte) error {
@@ -1018,41 +742,13 @@ func (m *Header) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Header proto.InternalMessageInfo
 
-func (m *Header) GetCid() string {
-	if m != nil {
-		return m.Cid
-	}
-	return ""
-}
-
-func (m *Header) GetOpCode() Header_OpCode {
-	if m != nil {
-		return m.OpCode
-	}
-	return Header_Invalid
-}
-
-func (m *Header) GetOrigin() bool {
-	if m != nil {
-		return m.Origin
-	}
-	return false
-}
-
 func init() {
 	proto.RegisterEnum("gamedata.Prefab", Prefab_name, Prefab_value)
 	proto.RegisterEnum("gamedata.Force_ForceMode", Force_ForceMode_name, Force_ForceMode_value)
 	proto.RegisterEnum("gamedata.Header_OpCode", Header_OpCode_name, Header_OpCode_value)
 	proto.RegisterType((*Packet)(nil), "gamedata.Packet")
-	proto.RegisterType((*ClientJoin)(nil), "gamedata.ClientJoin")
-	proto.RegisterType((*SimulationJoin)(nil), "gamedata.SimulationJoin")
-	proto.RegisterType((*ClientConnection)(nil), "gamedata.ClientConnection")
-	proto.RegisterType((*ClientOnline)(nil), "gamedata.ClientOnline")
+	proto.RegisterType((*ClientSeat)(nil), "gamedata.ClientSeat")
 	proto.RegisterType((*GameServerOnline)(nil), "gamedata.GameServerOnline")
-	proto.RegisterType((*GameServerStart)(nil), "gamedata.GameServerStart")
-	proto.RegisterType((*ClientGameFound)(nil), "gamedata.ClientGameFound")
-	proto.RegisterType((*ClientGameRequest)(nil), "gamedata.ClientGameRequest")
-	proto.RegisterType((*ClientGameCancel)(nil), "gamedata.ClientGameCancel")
 	proto.RegisterType((*SimulationState)(nil), "gamedata.SimulationState")
 	proto.RegisterType((*GameObject)(nil), "gamedata.GameObject")
 	proto.RegisterType((*Rigidbody)(nil), "gamedata.Rigidbody")
@@ -1066,56 +762,47 @@ func init() {
 func init() { proto.RegisterFile("gamedata.proto", fileDescriptor_38d51a89ffb18ac9) }
 
 var fileDescriptor_38d51a89ffb18ac9 = []byte{
-	// 805 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x55, 0xcb, 0x6e, 0x2b, 0x45,
-	0x10, 0x4d, 0xcf, 0xc4, 0x63, 0xbb, 0x1c, 0xec, 0x4e, 0x27, 0x04, 0x27, 0x2b, 0xd3, 0x08, 0xc9,
-	0x02, 0xe1, 0x48, 0x26, 0xc0, 0x86, 0x0d, 0x71, 0x14, 0x08, 0x12, 0x4a, 0xd4, 0x96, 0xc2, 0x06,
-	0x21, 0xb5, 0x67, 0xca, 0x66, 0x60, 0xdc, 0x6d, 0x66, 0xc6, 0x21, 0xde, 0xf0, 0x0d, 0xe4, 0x3f,
-	0x78, 0xfd, 0x01, 0x5b, 0xc2, 0x6f, 0xf0, 0x0b, 0x3c, 0xee, 0xf2, 0xaa, 0x7b, 0x66, 0x3c, 0x7e,
-	0xdc, 0xbb, 0xc8, 0xee, 0x6e, 0xac, 0xa9, 0xaa, 0x53, 0x55, 0xa7, 0xba, 0x1e, 0x86, 0xe6, 0x44,
-	0x4e, 0x31, 0x90, 0xa9, 0xec, 0xcd, 0x62, 0x9d, 0x6a, 0x56, 0x2b, 0xe4, 0x93, 0xe3, 0x89, 0xd6,
-	0x93, 0x08, 0x4f, 0xad, 0x7e, 0x34, 0x1f, 0x9f, 0x4a, 0xb5, 0xc8, 0x40, 0xfc, 0x2b, 0xf0, 0x6e,
-	0xa4, 0xff, 0x1d, 0xa6, 0xac, 0x0b, 0xde, 0x37, 0x28, 0x03, 0x8c, 0xdb, 0xa4, 0x43, 0xba, 0x8d,
-	0x3e, 0xed, 0x2d, 0xe3, 0x7d, 0x66, 0xf5, 0x22, 0xb7, 0xb3, 0x2e, 0xec, 0x1a, 0x75, 0xdb, 0xb1,
-	0xb8, 0xc3, 0x5e, 0x16, 0xbd, 0x57, 0x44, 0xef, 0x7d, 0xa2, 0x16, 0xc2, 0x22, 0x78, 0x07, 0x60,
-	0x10, 0x85, 0xa8, 0xd2, 0xcf, 0x75, 0xa8, 0x18, 0x83, 0x5d, 0xfd, 0x83, 0x4a, 0x6c, 0xfc, 0xba,
-	0xb0, 0xdf, 0x9c, 0x42, 0x73, 0x18, 0x4e, 0xe7, 0x91, 0x4c, 0x43, 0xad, 0x0c, 0x8a, 0x7f, 0x0c,
-	0x34, 0xf3, 0x19, 0x68, 0xa5, 0xd0, 0x37, 0x7a, 0xd6, 0x04, 0xe7, 0xea, 0x22, 0xf7, 0x73, 0xae,
-	0x2e, 0x58, 0x1b, 0xaa, 0x32, 0x08, 0x62, 0x4c, 0x12, 0x4b, 0xa2, 0x2e, 0x0a, 0x91, 0x73, 0xd8,
-	0xcb, 0xbc, 0xaf, 0x55, 0x14, 0x2a, 0x34, 0x39, 0x95, 0x9c, 0x62, 0x91, 0xd3, 0x7c, 0xf3, 0xaf,
-	0x81, 0x7e, 0x2a, 0xa7, 0x38, 0xc4, 0xf8, 0x0e, 0xe3, 0x1c, 0x77, 0x04, 0x5e, 0x82, 0x7e, 0x8c,
-	0x69, 0x8e, 0xcc, 0x25, 0xa3, 0x8f, 0x71, 0x12, 0x6a, 0x95, 0x27, 0xca, 0x25, 0x76, 0x02, 0x35,
-	0x5f, 0xce, 0xa4, 0x1f, 0xa6, 0x8b, 0xb6, 0xdb, 0x21, 0xdd, 0x8a, 0x58, 0xca, 0xfc, 0x4b, 0x68,
-	0x95, 0xf1, 0x87, 0xa9, 0x8c, 0xd3, 0xad, 0x02, 0xce, 0xa0, 0xea, 0x5b, 0x9a, 0xa6, 0x00, 0xb7,
-	0xdb, 0xe8, 0x9f, 0x94, 0xaf, 0xbd, 0x59, 0xbd, 0x28, 0xa0, 0xfc, 0x4d, 0x68, 0x65, 0x46, 0x13,
-	0xfe, 0x52, 0xcf, 0x55, 0xb0, 0x19, 0x98, 0xbf, 0x0b, 0xfb, 0x25, 0x44, 0xe0, 0xf7, 0x73, 0x4c,
-	0x56, 0x8b, 0x20, 0xab, 0x45, 0x70, 0x56, 0x3c, 0xb5, 0x01, 0x0f, 0xa4, 0xf2, 0x31, 0xe2, 0x3f,
-	0x42, 0xab, 0x6c, 0xc8, 0x30, 0x95, 0x29, 0xb2, 0x33, 0x80, 0x34, 0x96, 0x2a, 0x19, 0xeb, 0x78,
-	0x6a, 0xba, 0xe7, 0x66, 0x5d, 0x2f, 0xf8, 0x1a, 0xe7, 0xeb, 0xd1, 0xb7, 0xe8, 0xa7, 0x62, 0x05,
-	0xc7, 0x3e, 0x80, 0x46, 0x1c, 0x4e, 0xc2, 0xe0, 0x5c, 0x07, 0x21, 0x16, 0x65, 0x1e, 0x94, 0x6e,
-	0xc2, 0x18, 0x47, 0x3a, 0x58, 0x88, 0x55, 0x1c, 0x7f, 0x20, 0x00, 0x65, 0xc4, 0xad, 0x87, 0xeb,
-	0x82, 0x77, 0x13, 0xe3, 0x58, 0x8e, 0x6c, 0x3f, 0x9a, 0xab, 0x53, 0x9a, 0xe9, 0x45, 0x6e, 0x67,
-	0xef, 0x41, 0x6d, 0xa6, 0x93, 0xd0, 0x94, 0x61, 0x3b, 0xd4, 0xe8, 0xef, 0x97, 0xd8, 0x5b, 0xf4,
-	0x53, 0x1d, 0xf7, 0xc5, 0x12, 0x62, 0x1a, 0x1a, 0xeb, 0xd4, 0x56, 0xdd, 0xde, 0xed, 0x90, 0xae,
-	0x23, 0x96, 0x32, 0xff, 0x83, 0x40, 0x7d, 0x49, 0xf7, 0x95, 0xa0, 0x64, 0x42, 0xdd, 0x61, 0xa4,
-	0xed, 0xfc, 0x55, 0x5e, 0x1a, 0xaa, 0x80, 0xf0, 0x0f, 0xa1, 0x76, 0x9b, 0x7f, 0x6f, 0xf1, 0xdf,
-	0x03, 0x72, 0x6f, 0xa9, 0x3b, 0x82, 0xdc, 0x1b, 0x29, 0x9b, 0x68, 0x47, 0x10, 0xeb, 0x77, 0x53,
-	0xd0, 0x79, 0x8a, 0xdf, 0x03, 0x81, 0xca, 0xa5, 0x8e, 0x7d, 0x7c, 0x8a, 0x17, 0xfb, 0x08, 0xea,
-	0x63, 0xe3, 0xf4, 0x85, 0x0e, 0xd0, 0x56, 0xdc, 0xec, 0x1f, 0x97, 0x55, 0xd9, 0x78, 0xd9, 0xaf,
-	0x01, 0x88, 0x12, 0xcb, 0xdf, 0x82, 0xfa, 0x52, 0xcf, 0xea, 0x79, 0x6a, 0xba, 0xc3, 0x1a, 0x50,
-	0xbd, 0x9a, 0xce, 0xe6, 0x51, 0x82, 0x94, 0xf0, 0xb7, 0xa1, 0x9a, 0x3f, 0x4c, 0x46, 0x82, 0xac,
-	0x91, 0x70, 0x0a, 0xea, 0x8f, 0x2e, 0x78, 0xd9, 0xc1, 0x63, 0x14, 0x5c, 0x3f, 0x0c, 0x72, 0xf2,
-	0xe6, 0x93, 0x9d, 0x82, 0xa7, 0x67, 0x03, 0x43, 0x2f, 0xeb, 0xf5, 0x1b, 0x9b, 0x47, 0xb2, 0x77,
-	0x6d, 0xcd, 0x22, 0x87, 0x99, 0xd5, 0xd3, 0x66, 0xbc, 0xb3, 0x86, 0xd7, 0x44, 0x2e, 0xf1, 0xbf,
-	0x1d, 0xf0, 0x32, 0xa8, 0x25, 0xa9, 0xee, 0x64, 0x14, 0x06, 0x74, 0x87, 0xd1, 0xf5, 0xfb, 0x45,
-	0x03, 0x76, 0xb8, 0x7d, 0xad, 0x28, 0xb2, 0x83, 0xad, 0x1b, 0x43, 0xc7, 0xec, 0xe8, 0x05, 0xcb,
-	0x4f, 0xff, 0x24, 0xec, 0xf5, 0xed, 0x3d, 0xa7, 0x8f, 0x84, 0x1d, 0x6e, 0x9d, 0x13, 0xfa, 0x17,
-	0x61, 0xad, 0xd5, 0x9b, 0x4d, 0x7f, 0x76, 0xd8, 0x7e, 0x41, 0xc9, 0x28, 0x30, 0xa0, 0xbf, 0x38,
-	0xec, 0x60, 0xf3, 0x6a, 0xd3, 0x5f, 0x1d, 0x93, 0x65, 0x5d, 0x89, 0x01, 0xfd, 0xcd, 0x31, 0x59,
-	0x36, 0x0e, 0x0a, 0xfd, 0xdd, 0x31, 0x59, 0xca, 0x2d, 0xa7, 0x3f, 0xb9, 0xac, 0xb9, 0xb2, 0x62,
-	0xf4, 0xc1, 0x65, 0xaf, 0x95, 0x93, 0x47, 0xff, 0xb1, 0xa2, 0xc8, 0x67, 0x9f, 0xfe, 0xeb, 0x32,
-	0x80, 0xca, 0xd0, 0x97, 0x11, 0xd2, 0xff, 0xac, 0xa9, 0x98, 0x6d, 0xfa, 0xbf, 0x35, 0x65, 0xed,
-	0x7f, 0xe6, 0xbe, 0xc3, 0x8b, 0xd5, 0x5c, 0x7f, 0xe4, 0x06, 0x54, 0x2f, 0x70, 0xaa, 0xcf, 0xf5,
-	0x3d, 0x25, 0x23, 0xcf, 0xfe, 0x6f, 0xbd, 0xff, 0x3c, 0x00, 0x00, 0xff, 0xff, 0xec, 0x7c, 0xbc,
-	0x06, 0x3f, 0x07, 0x00, 0x00,
+	// 672 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x54, 0xcf, 0x6e, 0xd3, 0x4e,
+	0x10, 0xee, 0x3a, 0xff, 0x27, 0xfd, 0xa5, 0xfb, 0x5b, 0x0a, 0xa4, 0x3d, 0x45, 0x46, 0x48, 0x11,
+	0x12, 0xa9, 0x14, 0xa0, 0x9c, 0xdb, 0x46, 0x40, 0x0f, 0xa8, 0xd5, 0x06, 0xf5, 0x88, 0xb4, 0xb1,
+	0x27, 0x66, 0xc1, 0xf1, 0x46, 0xeb, 0x4d, 0x49, 0x2e, 0x3c, 0x03, 0x05, 0x1e, 0x03, 0x9e, 0x81,
+	0x2b, 0x2f, 0xc3, 0x9d, 0x23, 0xf2, 0xae, 0x1d, 0xa7, 0x42, 0x1c, 0x7a, 0xe3, 0x62, 0xed, 0xcc,
+	0x7c, 0xf3, 0xed, 0x37, 0xe3, 0x99, 0x85, 0x4e, 0x24, 0x66, 0x18, 0x0a, 0x23, 0x06, 0x73, 0xad,
+	0x8c, 0x62, 0xcd, 0xc2, 0xde, 0xdf, 0x8b, 0x94, 0x8a, 0x62, 0x3c, 0xb0, 0xfe, 0xc9, 0x62, 0x7a,
+	0x20, 0x92, 0x95, 0x03, 0xf9, 0x0b, 0xa8, 0x9f, 0x8b, 0xe0, 0x1d, 0x1a, 0x76, 0x00, 0x75, 0x35,
+	0x3f, 0x51, 0x21, 0x76, 0x49, 0x8f, 0xf4, 0x3b, 0xc3, 0xbb, 0x83, 0x35, 0xdf, 0x0b, 0x14, 0x21,
+	0xea, 0xc1, 0x99, 0x0d, 0xf3, 0x1c, 0xc6, 0xfa, 0x50, 0xcd, 0xa2, 0x5d, 0xaf, 0x47, 0xfa, 0xed,
+	0xe1, 0xee, 0xc0, 0x5d, 0x32, 0x28, 0x2e, 0x19, 0x1c, 0x25, 0x2b, 0x6e, 0x11, 0x8c, 0x42, 0x25,
+	0x90, 0x61, 0xb7, 0xd2, 0x23, 0xfd, 0x16, 0xcf, 0x8e, 0xfe, 0x21, 0xc0, 0x49, 0x2c, 0x31, 0x31,
+	0x63, 0x14, 0x86, 0xed, 0x42, 0x4d, 0xbd, 0x4f, 0x50, 0xdb, 0x9b, 0x5b, 0xdc, 0x19, 0x8c, 0x41,
+	0x35, 0x5a, 0xc8, 0xd0, 0xf2, 0xb7, 0xb8, 0x3d, 0xfb, 0xaf, 0x81, 0x3e, 0x17, 0x33, 0x1c, 0xa3,
+	0xbe, 0x44, 0x7d, 0x96, 0xc4, 0x32, 0x41, 0x76, 0x07, 0xea, 0x29, 0x06, 0x1a, 0x4d, 0x9e, 0x9e,
+	0x5b, 0x99, 0x5f, 0x63, 0x24, 0x55, 0x92, 0x33, 0xe4, 0x16, 0xdb, 0x87, 0x66, 0x20, 0xe6, 0x22,
+	0x90, 0x66, 0x65, 0x25, 0xd5, 0xf8, 0xda, 0xf6, 0x3f, 0xc0, 0xce, 0x58, 0xce, 0x16, 0xb1, 0x30,
+	0x52, 0x25, 0x63, 0x23, 0x0c, 0xb2, 0xc7, 0x00, 0x46, 0x8b, 0x24, 0x9d, 0x2a, 0x3d, 0x4b, 0xbb,
+	0xa4, 0x57, 0x71, 0xc5, 0x16, 0xbd, 0xc9, 0xe4, 0x9c, 0x4d, 0xde, 0x62, 0x60, 0xf8, 0x06, 0x8e,
+	0x3d, 0x81, 0xb6, 0x96, 0x91, 0x0c, 0x8f, 0x55, 0x28, 0x31, 0xed, 0x7a, 0x36, 0xed, 0x56, 0x99,
+	0xc6, 0xb3, 0xe0, 0x44, 0x85, 0x2b, 0xbe, 0x89, 0xf3, 0xaf, 0x08, 0x40, 0xc9, 0xc8, 0x3a, 0xe0,
+	0x9d, 0x8e, 0xf2, 0xb2, 0xbc, 0xd3, 0x11, 0xeb, 0x43, 0xfd, 0x5c, 0xe3, 0x54, 0x4c, 0x6c, 0x49,
+	0x9d, 0x21, 0x2d, 0x09, 0x9d, 0x9f, 0xe7, 0x71, 0xf6, 0x10, 0x9a, 0x73, 0x95, 0xca, 0xac, 0x0c,
+	0x5b, 0x64, 0x7b, 0xf8, 0x7f, 0x89, 0xbd, 0xc0, 0xc0, 0x28, 0x3d, 0xe4, 0x6b, 0x48, 0xd6, 0x13,
+	0xad, 0x8c, 0xad, 0xba, 0x5b, 0xed, 0x91, 0xbe, 0xc7, 0xd7, 0xb6, 0xff, 0x9d, 0x40, 0x6b, 0x2d,
+	0xf7, 0x9f, 0x90, 0x94, 0x51, 0x5d, 0x62, 0xac, 0xec, 0x2f, 0xac, 0xfd, 0x95, 0xaa, 0x80, 0xf8,
+	0x87, 0xd0, 0xbc, 0xc8, 0xcf, 0x7f, 0xe8, 0xdf, 0x06, 0xb2, 0xb4, 0xd2, 0x3d, 0x4e, 0x96, 0x99,
+	0xe5, 0x86, 0xc2, 0xe3, 0xc4, 0xe6, 0x9d, 0x17, 0x72, 0x6e, 0x92, 0x77, 0x45, 0xa0, 0xf6, 0x4c,
+	0xe9, 0x00, 0x6f, 0x92, 0xc5, 0x9e, 0x42, 0x6b, 0x9a, 0x25, 0xbd, 0xcc, 0x76, 0xb0, 0x6a, 0x9b,
+	0xb9, 0x57, 0x56, 0x65, 0xf9, 0xdc, 0x37, 0x03, 0xf0, 0x12, 0xeb, 0xdf, 0x83, 0xd6, 0xda, 0xcf,
+	0x5a, 0xf9, 0xd5, 0x74, 0x8b, 0xb5, 0xa1, 0x71, 0x3a, 0x9b, 0x2f, 0xe2, 0x14, 0x29, 0xf1, 0xef,
+	0x43, 0x23, 0x6f, 0x8c, 0x13, 0x41, 0xae, 0x89, 0xf0, 0x0a, 0xe9, 0xbf, 0x08, 0xd4, 0xdd, 0xba,
+	0xfb, 0x3f, 0x09, 0xd4, 0xdd, 0xca, 0x5b, 0xa6, 0xe4, 0x52, 0xc4, 0x32, 0xa4, 0x5b, 0x6c, 0x17,
+	0xa8, 0xdb, 0xdd, 0x91, 0x4c, 0x03, 0x95, 0x24, 0x18, 0x18, 0x1a, 0x32, 0x0a, 0xdb, 0xce, 0x7b,
+	0x34, 0x9f, 0xa3, 0x88, 0x29, 0xb2, 0x1d, 0x68, 0x3b, 0xcf, 0x2b, 0xbd, 0x48, 0x0d, 0x9d, 0xb2,
+	0x3d, 0xb8, 0x9d, 0x27, 0x0a, 0x23, 0x22, 0x2d, 0x66, 0x47, 0x61, 0xa8, 0x31, 0x4d, 0xe9, 0x1b,
+	0xd6, 0xd9, 0x7c, 0x0f, 0x68, 0xc4, 0xb6, 0xa1, 0x71, 0xa2, 0x12, 0x83, 0x4b, 0x43, 0x7f, 0x10,
+	0xb6, 0xb3, 0xb9, 0x14, 0xf4, 0xab, 0xc7, 0x3a, 0x1b, 0x13, 0x49, 0xbf, 0x79, 0xec, 0xbf, 0xf2,
+	0x47, 0xd1, 0x8f, 0x95, 0xcc, 0xe4, 0xf9, 0xa8, 0xd0, 0xab, 0x0a, 0x03, 0xa8, 0x8d, 0x03, 0x11,
+	0x23, 0xfd, 0x64, 0x43, 0xc5, 0x28, 0xd0, 0xcf, 0x36, 0xe4, 0xba, 0xf5, 0xa5, 0xf2, 0xc0, 0x2f,
+	0x26, 0xf9, 0x7a, 0xb9, 0x6d, 0x68, 0x8c, 0x70, 0xa6, 0x8e, 0xd5, 0x92, 0x92, 0x49, 0xdd, 0xbe,
+	0x6e, 0x8f, 0x7e, 0x07, 0x00, 0x00, 0xff, 0xff, 0xca, 0x0c, 0x12, 0xd6, 0x6c, 0x05, 0x00, 0x00,
 }
