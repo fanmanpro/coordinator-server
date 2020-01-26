@@ -27,9 +27,14 @@ func New() (*Client, error) {
 	return &Client{CID: id.String()}, nil
 }
 
-// NewTest TODO
-func NewTest() (*Client, error) {
-	return &Client{CID: "abc"}, nil
+// NewExplicit TODO
+func NewExplicit(id string) (*Client, error) {
+	return &Client{CID: id}, nil
+}
+
+// NewSim TODO
+func NewSim() (*Client, error) {
+	return &Client{CID: "sim"}, nil
 }
 
 //func (c *Client) InitializeConnections(conn *net.TCPConn, u *net.UDPConn, s chan *gamedata.Packet) error {
